@@ -1,0 +1,89 @@
+' TorCalX - prototype toric lens caculator, implementing clinical notation to power vector conversion
+' change a cell and the correspoding translation automatically occurs
+' allows addition and subtraction of two sets of power vectors
+' joe miller (jmillermdmph@gmail.com, jmiller@eyes.arizona.edu)
+' July 12, 2015
+
+
+
+Function ArcTan2(X As Double, Y As Double) As Double
+    Select Case X
+        Case Is > 0
+            ArcTan2 = Atn(Y / X)
+        Case Is < 0
+            ArcTan2 = Atn(Y / X) + 3.14159 * Sgn(Y)
+            If Y = 0 Then ArcTan2 = ArcTan2 + 3.14159
+        Case Is = 0
+            ArcTan2 = 1.5707 * Sgn(Y)
+    End Select
+End Function
+
+Private Sub CommandButtonAddLenses_Click()
+    Range("f7").Value = Range("f5").Value + Range("f6").Value
+    Range("g7").Value = Range("g5").Value + Range("g6").Value
+    Range("h7").Value = Range("h5").Value + Range("h6").Value
+    Range("c7").Value = Range("f7").Value - (Range("g7").Value ^ 2 + Range("h7").Value ^ 2) ^ 0.5
+    Range("d7").Value = 2 * (Range("g7").Value ^ 2 + Range("h7").Value ^ 2) ^ 0.5
+    Range("e7").Value = (0.5 * (ArcTan2(Range("g7").Value, Range("h7").Value)) * 180 / 3.1416) + 90
+End Sub
+
+Private Sub CommandButtonSubtractLenses_Click()
+    Range("f7").Value = Range("f5").Value - Range("f6").Value
+    Range("g7").Value = Range("g5").Value - Range("g6").Value
+    Range("h7").Value = Range("h5").Value - Range("h6").Value
+    Range("c7").Value = Range("f7").Value - (Range("g7").Value ^ 2 + Range("h7").Value ^ 2) ^ 0.5
+    Range("d7").Value = 2 * (Range("g7").Value ^ 2 + Range("h7").Value ^ 2) ^ 0.5
+    Range("e7").Value = (0.5 * (ArcTan2(Range("g7").Value, Range("h7").Value)) * 180 / 3.1416) + 90
+End Sub
+
+Private Sub CommandButtonClear_Click()
+    Range("C5", "h6").Value = 0
+    Range("C7:h7").ClearContents
+End Sub
+
+
+Private Sub worksheet_change(ByVal Target As Range)
+    Application.EnableEvents = False
+    If Intersect(Target, Range("c5:e5")) Is Nothing Then  'Lens 1 Clinical Value Change
+        ' do nothing
+    Else
+        'update Lens 1 power vectors
+        Range("F5").Value = Range("c5").Value + (Range("d5").Value + 0.000001) / 2
+        Range("G5").Value = -(((Range("d5").Value + 0.000001) / 2) * Cos(Range("e5").Value * 2 * 3.1416 / 180))
+        Range("H5").Value = -(((Range("d5").Value + 0.000001) / 2) * Sin(Range("e5").Value * 2 * 3.1416 / 180))
+        Range("c7:h7").ClearContents    ' empty out result vector, values have changed
+    End If
+    
+    If Intersect(Target, Range("c6:e6")) Is Nothing Then  'Lens 2 Clinical Value Change
+        ' do nothing
+    Else
+        'update Lens 2 power vectors
+        Range("F6").Value = Range("c6").Value + (Range("d6").Value + 0.000001) / 2
+        Range("G6").Value = -(((Range("d6").Value + 0.000001) / 2) * Cos(Range("e6").Value * 2 * 3.1416 / 180))
+        Range("H6").Value = -(((Range("d6").Value + 0.000001) / 2) * Sin(Range("e6").Value * 2 * 3.1416 / 180))
+        Range("c7:h7").ClearContents
+    End If
+
+    If Intersect(Target, Range("f5:h5")) Is Nothing Then ' Lens 1 Power Vector Change
+        'do nothing
+    Else
+        'update Lens 1 clinical values
+        Range("c5").Value = Range("f5").Value - (Range("g5").Value ^ 2 + Range("h5").Value ^ 2) ^ 0.5
+        Range("d5").Value = 2 * (Range("g5").Value ^ 2 + Range("h5").Value ^ 2) ^ 0.5
+        Range("e5").Value = (0.5 * (ArcTan2(Range("g5").Value, Range("h5").Value)) * 180 / 3.1416) + 90
+        Range("c7:h7").ClearContents
+
+    End If
+    If Intersect(Target, Range("f6:h6")) Is Nothing Then ' Lens 2 Power Vector Change
+        'do nothing
+    Else
+        'update the clinical vectors
+        Range("c6").Value = Range("f6").Value - (Range("g6").Value ^ 2 + Range("h6").Value ^ 2) ^ 0.5
+        Range("d6").Value = 2 * (Range("g6").Value ^ 2 + Range("h6").Value ^ 2) ^ 0.5
+        Range("e6").Value = (0.5 * (ArcTan2(Range("g6").Value, Range("h6").Value)) * 180 / 3.1416) + 90
+        Range("c7:h7").ClearContents
+
+    End If
+    Application.EnableEvents = True
+End Sub
+
